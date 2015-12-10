@@ -1,6 +1,9 @@
 # coding: utf-8
 # Distributed under the terms of the MIT License.
 from __future__ import print_function
+import numpy as np
+from np import linalg as LA
+from math import exp, expm1
 from pymatgen.io.xyz import XYZ
 from pymatgen.core import structure
 from pymatgen.core.sites import PeriodicSite
@@ -10,13 +13,14 @@ import yaml
 from pymatgen.io.vasp import Poscar, sets
 from string import digits
 
-
+#################################################################################################################################
 def generate_atom_list(items):
 	generate_atom_list = []
 	for each in items:
 		generate_atom_list.append(str(each))
 	return generate_atom_list	
 
+#################################################################################################################################
 def generate_coordinate_list(molecule):
 	generate_coordinate_list = [None]*len(molecule.sites)
 
@@ -27,6 +31,7 @@ def generate_coordinate_list(molecule):
 		generate_coordinate_list[each] = [every[0], every[1], every[2]]
 	return generate_coordinate_list	 
 
+#################################################################################################################################
 def import_Structure(type, config):
 	if type == 'xyz':
 		molecule = Molecule.from_file(config['filename'])
@@ -35,6 +40,7 @@ def import_Structure(type, config):
 	else:
 		return None 	
 
+#################################################################################################################################
 def known_atom_types_Connectors():
 	"""
 	Returns types_Required_Connectors: required connector types for a type
@@ -44,6 +50,7 @@ def known_atom_types_Connectors():
 		types_Required_Connectors.append(config['types'][str(each)]["REQUIRED_CONNECTORS"])
 	return types_Required_Connectors
 
+#################################################################################################################################
 def known_atom_types():
 	"""
 	Returns known atom types in a list
@@ -53,6 +60,7 @@ def known_atom_types():
 		types.append(str(each)) 
 	return types
 
+#################################################################################################################################
 def known_atom_types_general():
 	"""
 	Returns known atom types in a list
@@ -66,8 +74,10 @@ def known_atom_types_general():
 		required_connectors = config['types'][every]['REQUIRED_CONNECTORS']
 
 		known_atom_types_general.append( (every,charges,lj_parameters,mass,required_connectors) )
+		print(lj_parameters)
 	return known_atom_types_general
 
+#################################################################################################################################
 def known_bond_types():
 	"""
 	Returns known_bond_types: list of known atom bonds(list of sorted tuples)
@@ -82,6 +92,7 @@ def known_bond_types():
 		list_bond_types.append( (i,j,energy,length) )
 	return list_bond_types
 
+#################################################################################################################################
 def known_angle_types():
 	"""
 	Returns known_angle_types: list of known angles(list of sorted tuples)
@@ -100,6 +111,7 @@ def known_angle_types():
 		list_angle_types.append( (i,j,k,energy,theta) )
 	return list_angle_types
 
+#################################################################################################################################
 def known_torsion_types():
 	"""
 	Returns known_torsion_types: list of known torsions(list of sorted tuples)
@@ -120,6 +132,7 @@ def known_torsion_types():
 		known_torsion_types.append( (i,j,k,l,energy,angle,multiplicity) )
 	return known_torsion_types
 
+#################################################################################################################################
 def max_bond_length():
 	max_bond_length = 0
 	for each in known_bond_types():
@@ -128,17 +141,19 @@ def max_bond_length():
 				max_bond_length = bond_length
 	return float(max_bond_length + max_bond_length*config['bond_length_tolerance_factor'])
 
-
+#################################################################################################################################
 def is_slice_in_list(s,l):
     len_s = len(s) #so we don't recompute length of s on every iteration
     return any(s == l[i:len_s+i] for i in xrange(len(l) - len_s+1))
 
+#################################################################################################################################
 def hasNumbers(inputLIST):
 	for each in inputLIST:
 		if any(char.isdigit() for char in each):
 			return any(char.isdigit() for char in each)
 	return False
 
+#################################################################################################################################
 def type_assignment_execution_order():
 	"""
 		Returns an array for the order of execution of the type assignment 
@@ -203,6 +218,7 @@ def type_assignment_execution_order():
 			break
 	return position_order(types, type_execution_order)
 
+#################################################################################################################################
 def atom_type_NUMBER(type_of_atom):
 	i = 0
 	for each in known_atom_types_general():
@@ -211,6 +227,7 @@ def atom_type_NUMBER(type_of_atom):
 		i = i + 1
 	return None
 
+#################################################################################################################################
 def site_bonded(site1,site2, bond_length):
 	"""
 	Requirements for a bond:
@@ -233,7 +250,7 @@ def site_bonded(site1,site2, bond_length):
 		count = count + 1
 	return (False, None)
 
-
+#################################################################################################################################
 def redefine_site_type():
 	"""
 	Once the bonds have been updated, we check again to see if species are correctly identified.
@@ -267,23 +284,26 @@ def redefine_site_type():
 					atom_sites[i].type = types[ii]
 				if sorted(dependencies[ii]) == nn_types_new:
 					atom_sites[i].type = types[ii]
-			
+
+#################################################################################################################################			
 def count_BONDS():
 	bonds = 0
 	for each in atom_sites:
 		bonds = bonds + len(each.bonds)
 	return bonds/2
 
+#################################################################################################################################
 def save_BLANK_LINES(number_blank_lines, f):
 	for i in range(0,number_blank_lines):
 		print('', file=f)
 
+#################################################################################################################################
 def generate_DATA_FILE():
 
-"""
+	"""
 	See: http://lammps.sandia.gov/doc/2001/data_format.html
 	for an example of data file. 
-"""
+	"""
 
 	fil = config['filename'].split(".", 1)
 	f = open(str(fil[0] + ".data"),'w')
@@ -309,10 +329,25 @@ def generate_DATA_FILE():
 
 	save_BLANK_LINES(1, f)
 
-	#print(Lattice.lengths_and_angles(structure))
-	#print(len(atom_sites)+ " xlo xhi",f) #-0.5 0.5 xlo xhi       #(for periodic systems this is box size,
-	#print(len(atom_sites)+ " ylo yhi",f) #-0.5 0.5 ylo yhi       # for non-periodic it is min/max extent of atoms)
-	#print(len(atom_sites)+ " zlo zhi",f) #-0.5 0.5 zlo zhi       #(do not include this line for 2-d simulations)
+	# RH edit 12/7/15
+	X = config["lattice_parameters"]["vectors"]['i']
+	Y = config["lattice_parameters"]["vectors"]['j']
+	Z = config["lattice_parameters"]["vectors"]['k']
+	alpha = math.radians(config["lattice_parameters"]["angles"]['alpha'])
+	beta = math.radians(config["lattice_parameters"]["angles"]['beta'])
+	gamma = math.radians(config["lattice_parameters"]["angles"]['gamma'])
+	xlo = 0
+	ylo = 0
+	zlo = 0
+	xhi = LA.norm(X)
+	xy = LA.norm(Y)*math.cos(gamma)
+	yhi = LA.norm(Y)*math.sin(gamma)
+	xz = LA.norm(Z)*math.cos(beta)
+	yz = ((np.dot(Y,Z) - xy*yz)/yhi
+	zhi = math.sqrt(math.pow(LA.norm(Z),2) - math.pow(xz,2) - math.pow(yz,2))
+	print(len(atom_sites)+ " xlo xhi",f) #-0.5 0.5 xlo xhi       #(for periodic systems this is box size,
+	print(len(atom_sites)+ " ylo yhi",f) #-0.5 0.5 ylo yhi       # for non-periodic it is min/max extent of atoms)
+	print(len(atom_sites)+ " zlo zhi",f) #-0.5 0.5 zlo zhi       #(do not include this line for 2-d simulations)
       
 	save_BLANK_LINES(1, f)
 	print("Masses", file=f)
@@ -415,11 +450,20 @@ class site_in_Structure:
 					self.angle_type = angle_type
 					self.angles.append()
 
+#################################################################################################################################
+def generate_VDW_DATA_FILE():
+	f = open(str("VDW_LAMMPS.data"),'w')
+	for i in range(len(known_atom_types())):
+        for j in range(i,len(known_atom_types())):
+            mixed_epsilon = np.sqrt(float(lj_parameters[i][1])*float(lj_parameters[j][1]))#*0.00198717
+            mixed_sigma = (float(lj_parameters[i][0])+float(lj_parameters[j][0]))/float(2)
+            f.write('pair_coeff '+str(i+1)+' '+str(j+1)+' lj/cut '+str(mixed_epsilon)+' '+str(mixed_sigma)+'\n')
+    f.close()
 
 
 
 
-
+#################################################################################################################################
 ## STEPS TO RUN ##
 
 #1.
@@ -464,10 +508,8 @@ nn_sites = (structure.get_neighbors(sites[0], max_bond_length(), include_index=T
 """
 This is to debug use other version for all nn geneations.
 Need to iterate through "level" by level. 
-
 None-type are already assigned with proper site types.
 Next levels can be interdependant and need to be iterated through one at a time.
-
 """
 for order_assign_number in position_order_assignment:
 	siteval = 0	
