@@ -1,5 +1,7 @@
 # coding: utf-8
 # Distributed under the terms of the MIT License.
+# If you make an update that you feel others would need, feel free to make a merge request to the main branch with your update (https://github.com/cpueschel/Lammps-Data-File-Generator.git). 
+
 from __future__ import print_function
 import numpy as np
 from numpy import linalg as LA
@@ -169,9 +171,6 @@ def type_assignment_execution_order():
 		dependencies[i] = each[4].values()
 		i = i + 1
 
-	# #Intial Sorting
-	# types = sorted(types, key=str.lower)
-
 	#Change to order in types at some point, for readability keep variable # for now.
 	#1 Check for items without dependencies.
 	switch = 0
@@ -293,6 +292,12 @@ def count_ANGLES():
 		angles = angles + len(each.angles)
 	return angles
 
+def count_dihedrals():
+	dihedrals = 0
+	for each in atom_sites:
+		dihedrals = dihedrals + len(each.dihedrals)
+	return dihedrals
+
 def save_BLANK_LINES(number_blank_lines, f):
 	for i in range(0,number_blank_lines):
 		print('', file=f)
@@ -316,7 +321,9 @@ def generate_DATA_FILE():
 	print(str(len(atom_sites))+ " atoms", file=f)
 	print(str(count_BONDS()) + " bonds", file=f)
 	print(str(count_ANGLES())+ " angles", file=f)
-	#print(len(atom_sites)+ " dihedrals", file=f)
+	num_dihedrals = count_dihedrals()
+	if num_dihedrals > 0:
+		print(str(num_dihedrals)+ " dihedrals", file=f)
 	#print(len(atom_sites)+ " impropers", file=f)
 
 	save_BLANK_LINES(1, f)
@@ -438,6 +445,26 @@ def generate_DATA_FILE():
 			i = i + 1
 		site_number = site_number + 1
 
+	#Dihedrals
+	save_BLANK_LINES(1, f)
+
+	print("Dihedrals", file=f) 
+	i = 1
+	site_number = 1
+	for each in atom_sites:
+		ii = 0
+		for every in each.dihedrals:
+			print(str(i)+" "+str(each.dihedral_types[ii]+1)+" "+str(site_number)+" "+str(every[1]+1)+" "+str(every[2]+1)+" "+str(every[3]+1), file=f)	
+			ii = ii + 1
+			i = i + 1
+		site_number = site_number + 1
+	
+	#Impropers
+	save_BLANK_LINES(1, f)
+
+	print("Impropers", file=f) 
+	#If you need this functionality, feel free to add this feature and then request a merge to the main branch.
+
 class StructureSite: 
 	# bonds is a list of atoms that the atom is bonded to
 	# eg. (site)
@@ -529,7 +556,6 @@ class StructureSite:
 
 def generate_VDW_DATA_FILE():
 	atom_types_general = known_atom_types_general()
-	lj_parameters = atom_types_general[2]
 	f = open(str("VDW_LAMMPS.data"),'w')
 	for i in range(len(atom_types_general)):
 		lj_i = atom_types_general[i][2]
@@ -552,7 +578,7 @@ with open("config", 'r') as ymlfile:
 
 #-------------- Load in Structure ------------- 
 global structure
-structure_pos = Poscar.from_file("lioh_poscar.vasp")#import_Structure(config['structure_type'], config)
+structure_pos = Poscar.from_file(config['filename'])#import_Structure(config['structure_type'], config)
 
 structure = structure_pos.structure
 sites = structure.sites
@@ -571,15 +597,8 @@ i,types, dependencies = 0,[None]*len(atom_types_general),[None]*len(atom_types_g
 for each in atom_types_general:
 	types[i] = each[0]
 	dependencies[i] = each[4].values()
-	# if 'None' in dependencies[i]:
-	# 	print "None"
 	i = i + 1
 
-
-
-#List of all sites
-#nn_sites = (structure.get_neighbors(sites[0], max_bond_length(), include_index=True),structure.get_neighbors(sites[1], max_bond_length(), include_index=True))
-nn_sites = structure.get_all_neighbors(max_bond_length(),include_index=True)
 
 """
 This is to debug use other version for all nn geneations.
@@ -587,6 +606,10 @@ Need to iterate through "level" by level.
 None-type are already assigned with proper site types.
 Next levels can be interdependant and need to be iterated through one at a time.
 """
+#List of all sites
+#nn_sites = (structure.get_neighbors(sites[0], max_bond_length(), include_index=True),structure.get_neighbors(sites[1], max_bond_length(), include_index=True))
+nn_sites = structure.get_all_neighbors(max_bond_length(),include_index=True)
+
 #Iterates through each position assignment for Bond Assignment.
 for order_assign_number in position_order_assignment:
 	siteval = 0	
@@ -603,7 +626,6 @@ for order_assign_number in position_order_assignment:
 
 #Iterates through each position assignement for Angle and Dihedrals
 siteval = 0	
-
 for each_site in nn_sites:
 	site_species = sites[siteval].species_string
 	for each_nn in each_site:
@@ -620,11 +642,7 @@ for each_site in nn_sites:
 				(checked_if_dihedrals, type_dihedral) = atom_sites[siteval].check_if_dihedral(siteval,int(each_nn[2]),each_second_nn,each_third_nn)
 	siteval = siteval + 1
 
-#Check input structure	
-#structure.to(filename="POSCAR")
-
-
-########### Generate Output Files ###################
+#-------------- Generate Output Files --------------
 generate_DATA_FILE()
 generate_VDW_DATA_FILE()
-########### Generate Facts ###################
+
