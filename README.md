@@ -19,9 +19,9 @@ Alternatively, go to their [website](http://pymatgen.org/) for installation inst
 
 ##3. Quick-start Guide
 Obtain all of the necessary input files; 
-1. Config containing proper atom, bond, angle, dihedral, and filename.
-2. Molecule/System defined in a POSCAR (VASP). Additional support for just xyz is being implemented.
-3. Ensure you have pymatgen and python 2.7+
+>1. Config containing proper atom, bond, angle, dihedral, and filename.
+>2. Molecule/System defined in a POSCAR (VASP). Additional support for just xyz is being implemented.
+>3. Ensure you have pymatgen and python 2.7+
 
 To run simply edit the input files and run with them in the same folder;
 `python LDFG.py`
