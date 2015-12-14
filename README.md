@@ -23,5 +23,5 @@ Obtain all of the necessary input files;
 2. Molecule/System defined in a POSCAR (VASP). Additional support for just xyz is being implemented.
 3. Ensure you have pymatgen and python 2.7+
 
-To run simply have the input files in the same folder;
+To run simply edit the input files and run with them in the same folder;
 `python LDFG.py`
