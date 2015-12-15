@@ -6,7 +6,7 @@ Quickly generate a LAMMPS data file to define a force field for a periodic syste
 This includes:
 * Bonds
 * Angles
-* Proper Torsions (dihedrals) [Soon]
+* Proper Torsions (dihedrals)
 
 ##2. Required Dependencies
 Make sure you have installed pymatgen. This can be done:
