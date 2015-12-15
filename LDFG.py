@@ -217,7 +217,6 @@ def site_bonded(site1,site2, bond_length, level):
 	count = 0
 	bond_types_general = known_bond_types()
 	for each in bond_types_general: # i=0,j=1,length=3
-
 		if each[0] == site1type and each[1] == site2type: 
 				if  bond_length >= lower_range and bond_length <= upper_range:
 					atom_sites[site1].add_bond(site2, count, bond_length)
@@ -292,7 +291,7 @@ def verify_SITES():
 def site_update_type(siteval, nearest_neighbors,level, order_assign_number):
 	atom_types_general,bond_types_general = known_atom_types_general(),known_bond_types()
 	i,types, dependency = 0,[None]*len(atom_types_general),[None]*len(atom_types_general)
-		
+
 	for each in atom_types_general:
 		types[i] = each[0]
 		dependencies[i] = each[4].values()
@@ -320,6 +319,8 @@ def site_update_type(siteval, nearest_neighbors,level, order_assign_number):
 			for each in nn_atoms:
 				i = i + 1
 				(checked_if_bonds, type_bond) = site_bonded(siteval,each, bond_length[i], level)
+				if  atom_sites[siteval].type == 'Zn':
+					print(checked_if_bonds,type_bond,'with ',each,atom_sites[each].type)
 				if checked_if_bonds:
 					atom_sites[siteval].add_bond(each, type_bond, bond_length[i])
 				elif atom_sites[siteval].bonded(each):
@@ -328,6 +329,9 @@ def site_update_type(siteval, nearest_neighbors,level, order_assign_number):
 					cont = 0
 			if cont == 1:
 				if sorted(nn_types) == sorted(dependencies[order_assign_number]):
+					#Assign new type
+					atom_sites[siteval].type = types[order_assign_number]	
+				if sorted(dependencies[order_assign_number]) == ['None']:
 					#Assign new type
 					atom_sites[siteval].type = types[order_assign_number]	
 
@@ -347,6 +351,9 @@ def site_update_type(siteval, nearest_neighbors,level, order_assign_number):
 				if sorted(nn_types) == sorted(dependencies[order_assign_number]):
 					#Assign new type
 					atom_sites[siteval].type = types[order_assign_number]
+				if sorted(dependencies[order_assign_number]) == ['None']:
+					#Assign new type
+					atom_sites[siteval].type = types[order_assign_number]	
 
 def redefine_site_type():
 	"""
@@ -376,15 +383,14 @@ def redefine_site_type():
 		nn_types_new = sorted(nn_types_new)
 
 		for ii in range(len(atom_types_general)):
-			if None not in dependencies[ii]:
-				if sorted(dependencies[ii]) == nn_types:
-					atom_sites[i].type = types[ii]
-				if sorted(dependencies[ii]) == nn_types_new:
-					atom_sites[i].type = types[ii]
+			if sorted(dependencies[ii]) == nn_types:
+				atom_sites[i].type = types[ii]
+			if sorted(dependencies[ii]) == nn_types_new:
+				atom_sites[i].type = types[ii]
 	verify_SITES()
 			
 def count_BONDS():
-	bonds,site_number = 0,1
+	bonds,site_number = 0,0
 
 	bonds_added = []
 	for each in atom_sites:
@@ -718,6 +724,7 @@ for order_assign_number in position_order_assignment:
 		level = 0
 
 	siteval = 0	
+
 	for each_site in nn_sites:
 		if sites[siteval].species_string == types[order_assign_number].translate(None, digits):
 			site_update_type(siteval, each_site,level, order_assign_number)
@@ -747,3 +754,8 @@ for each_site in nn_sites:
 generate_DATA_FILE()
 generate_VDW_DATA_FILE()
 
+listofatoms=[]
+for each in atom_sites:
+	if each.type == 'Zn':
+		print(each.bonds)
+print('nn',nn_sites[432])
