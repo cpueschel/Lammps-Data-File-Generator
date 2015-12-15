@@ -1,8 +1,6 @@
 #LAMMPS Data File Generator
 Generate data file for lammps using force field and a POSCAR (VASP) like input file.
 
-## Note: Currently adding functionality for proper torsions (dihedrals)
-
 ##1. What does it do?
 Quickly generate a LAMMPS data file to define a force field for a periodic system and Van Der Waals interactional parameters data file. 
 This includes:
