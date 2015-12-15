@@ -319,8 +319,6 @@ def site_update_type(siteval, nearest_neighbors,level, order_assign_number):
 			for each in nn_atoms:
 				i = i + 1
 				(checked_if_bonds, type_bond) = site_bonded(siteval,each, bond_length[i], level)
-				if  atom_sites[siteval].type == 'Zn':
-					print(checked_if_bonds,type_bond,'with ',each,atom_sites[each].type)
 				if checked_if_bonds:
 					atom_sites[siteval].add_bond(each, type_bond, bond_length[i])
 				elif atom_sites[siteval].bonded(each):
@@ -754,8 +752,3 @@ for each_site in nn_sites:
 generate_DATA_FILE()
 generate_VDW_DATA_FILE()
 
-listofatoms=[]
-for each in atom_sites:
-	if each.type == 'Zn':
-		print(each.bonds)
-print('nn',nn_sites[432])
