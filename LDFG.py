@@ -15,13 +15,6 @@ import yaml
 from pymatgen.io.vasp import Poscar, sets
 from string import digits
 
-
-def generate_atom_list(items):
-	generate_atom_list = []
-	for each in items:
-		generate_atom_list.append(str(each))
-	return generate_atom_list	
-
 def generate_coordinate_list(molecule):
 	generate_coordinate_list = [None]*len(molecule.sites)
 
