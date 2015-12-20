@@ -15,16 +15,6 @@ import yaml
 from pymatgen.io.vasp import Poscar, sets
 from string import digits
 
-def generate_coordinate_list(molecule):
-	generate_coordinate_list = [None]*len(molecule.sites)
-
-	gensites = molecule.sites
-
-	for each in range(0,len(molecule.sites)):
-		every = molecule.sites[each].coords
-		generate_coordinate_list[each] = [every[0], every[1], every[2]]
-	return generate_coordinate_list	 	
-
 def known_atom_types_Connectors():
 	"""
 	Returns types_Required_Connectors: required connector types for a type
