@@ -1,0 +1,4 @@
+pair_coeff 1 1 lj/cut 0.0238 2.571
+pair_coeff 1 2 lj/cut 0.0297949660178 2.916
+pair_coeff 2 1 lj/cut 0.0297949660178 2.916
+pair_coeff 2 2 lj/cut 0.0373 3.261

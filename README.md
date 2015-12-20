@@ -20,6 +20,7 @@ Obtain all of the necessary input files;
 >1. Config containing proper atom, bond, angle, dihedral, and filename.
 >2. Molecule/System defined in a POSCAR (VASP). Additional support for just xyz is being implemented.
 >3. Ensure you have pymatgen and python 2.7+
-
+>4. The example folder includes the files to generate the data file for a CHA Zeolite.
 To run simply edit the input files and run with them in the same folder;
 `python LDFG.py`
+

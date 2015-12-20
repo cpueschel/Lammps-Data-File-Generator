@@ -157,7 +157,7 @@ def type_assignment_execution_order():
 	for each in atom_types_general:
 		types[i] = each[0]
 		dependencies[i] = each[4].values()
-		i = i + 1
+		i += 1
 
 	#Change to order in types at some point, for readability keep variable # for now.
 	#1 Check for items without dependencies.
@@ -191,7 +191,13 @@ def type_assignment_execution_order():
 		switch = switch + 1
 		if switch > 10:
 			print("Arguments for input not properly ordered")
-			break
+			break 
+
+	# Allow user to verify order		
+	print_types = []
+	for each in (position_order(types, type_execution_order)):
+		print_types.append(types[each])
+	print("Order of execution for type assignment:", print_types)
 	return position_order(types, type_execution_order)
 
 
@@ -200,192 +206,89 @@ def atom_type_NUMBER(type_of_atom):
 	for each in known_atom_types_general():
 		if type_of_atom == each[0]:
 			return i
-		i = i + 1
+		i += 1
 	return None
 
-def site_bonded(site1,site2, bond_length, level):
+def site_bonded(site1,site2, bond_length):
 	"""
 	Requirements for a bond:
 	
 	Must have a bond length = required bond length +/- varriance 
-	Must be the correct types.
+	Must be the correct atomic species_string.
+	Then it is identified as a "None" type of bond. Since specific atomic types need to be determined based on bonds.
 	"""
 	site1type = atom_sites[site1].type
 	site2type = atom_sites[site2].type
 	upper_range = bond_length + bond_length*float(config['bond_length_tolerance_factor'])
 	lower_range = bond_length - bond_length*float(config['bond_length_tolerance_factor'])
-	count = 0
 	bond_types_general = known_bond_types()
 	for each in bond_types_general: # i=0,j=1,length=3
-		if each[0] == site1type and each[1] == site2type: 
+		if each[0].translate(None, digits) == site1type and each[1].translate(None, digits) == site2type: 
 				if  bond_length >= lower_range and bond_length <= upper_range:
-					atom_sites[site1].add_bond(site2, count, bond_length)
-					return (True,count)
-		if each[0] == site2type and each[1] == site1type:
+					return True
+		if each[0].translate(None, digits) == site2type and each[1].translate(None, digits) == site1type:
 				if  bond_length >= lower_range and bond_length <= upper_range:
-					atom_sites[site1].add_bond(site2, count, bond_length)
-					return (True,count)
+					return True
+	return False				
 
-		if level == 0:
-			if each[0].translate(None, digits) == sites[site1].species_string and each[1].translate(None, digits) == sites[site2].species_string: 
-				if  bond_length >= lower_range and bond_length <= upper_range:
-					atom_sites[site1].add_bond(site2, count, bond_length)
-					return (True,count)
-			if each[0].translate(None, digits) == sites[site2].species_string and each[1].translate(None, digits) == sites[site1].species_string:
-				if  bond_length >= lower_range and bond_length <= upper_range:
-					atom_sites[site1].add_bond(site2, count, bond_length)
-					return (True,count)
-			count = count + 1
+def contains_digits(s):
+    return any(char.isdigit() for char in s)
 
-		if level == 1:
-			if each[0].translate(None, digits) == site1type and each[1] == site2type: 
-				if  bond_length >= lower_range and bond_length <= upper_range:
-					atom_sites[site1].add_bond(site2, count, bond_length)
-					return (True,count)
-			if each[0].translate(None, digits) == site2type and each[1] == site1type:
-				if  bond_length >= lower_range and bond_length <= upper_range:
-					atom_sites[site1].add_bond(site2, count, bond_length)
-					return (True,count)
+def bond_type_assignment(siteval):
+	atom_number = 0
+	for bonded_atom in atom_sites[siteval].bonds:
+		bond_type_counter = 0
+		for bond_types in known_bond_types():
+			if (bond_types[0] == atom_sites[bonded_atom].type and bond_types[1] == atom_sites[siteval].type) or (bond_types[1] == atom_sites[bonded_atom].type and bond_types[0] == atom_sites[siteval].type):
+				atom_sites[siteval].bond_types[atom_number] = bond_type_counter
+				break
+			bond_type_counter += 1
+		atom_number += 1
+			
+def type_assignment(siteval,level, order_assign_number):
+	# Fix level assignment!!!
 
-			if each[1].translate(None, digits) == site1type and each[0] == site2type: 
-				if  bond_length >= lower_range and bond_length <= upper_range:
-					atom_sites[site1].add_bond(site2, count, bond_length)
-					return (True,count)
-			if each[1].translate(None, digits) == site2type and each[0] == site1type:
-				if  bond_length >= lower_range and bond_length <= upper_range:
-					atom_sites[site1].add_bond(site2, count, bond_length)
-					return (True,count)
-			count = count + 1
-	return (False, None)
-
-def verify_SITES():
-	atom_types_general = known_atom_types_general()
-	i,types, dependency = 0,[None]*len(atom_types_general),[None]*len(atom_types_general)
-	for each in atom_types_general:
-		types[i] = each[0]
-		dependencies[i] = each[4].values()
-		i = i+ 1
-	old_type = structure.sites
-	for i in range(len(structure.sites)):
-		if old_type == atom_sites[i].type:
-			if dependencies[i] == [None]:
-				continue
-
-			bonds_current = atom_sites[i].bonds
-			nn_types_striped,nn_types = [],[]
-			for each in bonds_current:
-				nn_types_striped.append(str(atom_sites[each].type).translate(None, digits))
-				nn_types.append(str(atom_sites[each].type))
-			nn_types_striped,nn_types = sorted(nn_types_striped),sorted(nn_types)
-
-			for i in range(len(dependencies)):
-				if types[i].translate(None, digits) == atom_sites[i]:
-					if hasNumbers(dependencies[i]):
-						#Must account for numbered dependencies. eg. H3,C3
-						if dependencies[i].issubset(nn_types):
-							atom_sites[i].type = types[i]
-					else:
-						if dependencies[i].issubset(nn_types_striped):
-							atom_sites[i].type = types[i]						
-
-def site_update_type(siteval, nearest_neighbors,level, order_assign_number):
+	#Intialize Types of bonds.
 	atom_types_general,bond_types_general = known_atom_types_general(),known_bond_types()
-	i,types, dependency = 0,[None]*len(atom_types_general),[None]*len(atom_types_general)
-
+	i,types, dependencies = 0,[None]*len(atom_types_general),[None]*len(atom_types_general)
 	for each in atom_types_general:
 		types[i] = each[0]
 		dependencies[i] = each[4].values()
-		i = i+ 1
+		i += 1
 
+	#Check if atomic species is correct for the order asign number.
 	if types[order_assign_number].translate(None, digits) == sites[siteval].species_string:
-		i,bond_length, ii,j = 0,[None]*len(bond_types_general),[None]*len(bond_types_general),[None]*len(bond_types_general)
-		for each in known_bond_types():
-			bond_length[i] = each[3]		
-			ii[i] = each[0]
-			j[i] = each[1]
-			i = i+ 1
+		bonded_atoms,nn_types = atom_sites[siteval].bonds,[]
 
-		nn_atoms,nn_types,nn_bondlength,nn_types_updated = [],[],[],[]
-		for each in nearest_neighbors:
-			nn_atoms.append(each[2])
-			nn_types.append(str(sites[each[2]].species_string))
-		 	nn_types_updated.append(atom_sites[each[2]].type)
-		 	nn_bondlength.append(each[1])
-		i = -1 	
+		# Level 0: (None) Assign higher level types based on basic species, requires no bonds.
 		if level == 0:
-			#Use nn_types
-			cont = 1
+			atom_sites[siteval].type = types[order_assign_number]
 
-			for each in nn_atoms:
-				i = i + 1
-				(checked_if_bonds, type_bond) = site_bonded(siteval,each, bond_length[i], level)
-				if checked_if_bonds:
-					atom_sites[siteval].add_bond(each, type_bond, bond_length[i])
-				elif atom_sites[siteval].bonded(each):
-					cont = 1	
-				else:
-					cont = 0
-			if cont == 1:
-				if sorted(nn_types) == sorted(dependencies[order_assign_number]):
-					#Assign new type
-					atom_sites[siteval].type = types[order_assign_number]	
-				if sorted(dependencies[order_assign_number]) == ['None']:
-					#Assign new type
-					atom_sites[siteval].type = types[order_assign_number]	
+		for each in bonded_atoms:
 
-		if level == 1:
-			#Ues nn_types updated
-			cont = 1
-			for each in nn_atoms:
-				i = i + 1
-				(checked_if_bonds, type_bond) = site_bonded(siteval,each, bond_length[i], level)
-				if checked_if_bonds:
-					atom_sites[siteval].add_bond(each, type_bond, bond_length[i])
-				elif atom_sites[siteval].bonded(each):
-					cont = 1	
-				else:
-					cont = 0
-			if cont == 1:
-				if sorted(nn_types) == sorted(dependencies[order_assign_number]):
-					#Assign new type
+			#Level 1: Remove type from atom to get species
+			if level == 1:
+				# Level 1: Assign based on atomic species.
+				nn_types.append(atom_sites[each].type.translate(None, digits))
+			# Level 2: Assigned based on type attached.
+			if level == 2:
+				nn_types.append(atom_sites[each].type)
+
+		#Check if assigned a type, and if so, does the new type better define the bonds
+		#Case 1: Lists are Identical, assign type
+		if sorted(nn_types) == sorted(dependencies[order_assign_number]):
+
+			#Assign new type
+			atom_sites[siteval].type = types[order_assign_number]		
+		#Case 2: Lists are possible, determine if larger than prior diescription
+		if sorted(dependencies[order_assign_number]) < sorted(nn_types):
+			if contains_digits(atom_sites[siteval].type):
+				# Assign highest order assign number
+				if len(dependencies[order_assign_number]) >= len(dependencies[atom_type_NUMBER(atom_sites[siteval].type)]):
 					atom_sites[siteval].type = types[order_assign_number]
-				if sorted(dependencies[order_assign_number]) == ['None']:
-					#Assign new type
-					atom_sites[siteval].type = types[order_assign_number]	
+			else:
+				atom_sites[siteval].type = types[order_assign_number]
 
-def redefine_site_type():
-	"""
-	Once the bonds have been updated, we check again to see if species are correctly identified.
-	For each site:
-		Identfy type.
-			Identify types bonded to.
-			See if these correspond to a the required connectors.
-	"""
-	atom_types_general = known_atom_types_general()
-	i,types, dependency = 0,[None]*len(atom_types_general),[None]*len(atom_types_general)
-	for each in atom_types_general:
-		types[i] = each[0]
-		dependencies[i] = each[4].values()
-		i = i+ 1
-
-	for i in range(len(structure.sites)):
-		type_atom = atom_sites[i].type
-		bonds_current = atom_sites[i].bonds
-		bond_types_current = atom_sites[i].bond_types
-		nn_types, nn_types_new= [],[]
-
-		for each in bonds_current:
-			nn_types.append(str(sites[each].species_string))
-			nn_types_new.append(str(atom_sites[each].type))
-		nn_types = sorted(nn_types)
-		nn_types_new = sorted(nn_types_new)
-
-		for ii in range(len(atom_types_general)):
-			if sorted(dependencies[ii]) == nn_types:
-				atom_sites[i].type = types[ii]
-			if sorted(dependencies[ii]) == nn_types_new:
-				atom_sites[i].type = types[ii]
-	verify_SITES()
 			
 def count_BONDS():
 	bonds,site_number = 0,0
@@ -395,20 +298,20 @@ def count_BONDS():
 		for every in each.bonds:
 			if sorted([site_number,every]) not in bonds_added:
 				bonds_added.append(sorted([site_number,every]))	
-				bonds = bonds + 1
-		site_number = site_number + 1
+				bonds += 1
+		site_number += 1
 	return bonds
 
 def count_ANGLES():
 	angles = 0
 	for each in atom_sites:
-		angles = angles + len(each.angles)
+		angles += len(each.angles)
 	return angles
 
 def count_dihedrals():
 	dihedrals = 0
 	for each in atom_sites:
-		dihedrals = dihedrals + len(each.dihedrals)
+		dihedrals += len(each.dihedrals)
 	return dihedrals
 
 def save_BLANK_LINES(number_blank_lines, f):
@@ -574,6 +477,18 @@ def generate_DATA_FILE():
 	print("Impropers", file=f) 
 	#If you need this functionality, feel free to add this feature and then request a merge to the main branch.
 
+def generate_VDW_DATA_FILE():
+	atom_types_general = known_atom_types_general()
+	f = open(str("VDW_LAMMPS.data"),'w')
+	for i in range(len(atom_types_general)):
+		lj_i = atom_types_general[i][2]
+		for j in range(len(atom_types_general)):
+			lj_j = atom_types_general[j][2]
+			mixed_epsilon = np.sqrt(float(lj_i[1])*float(lj_j[1]))
+			mixed_sigma = (float(lj_i[0])+float(lj_j[0]))/float(2)
+			f.write('pair_coeff '+str(i+1)+' '+str(j+1)+' lj/cut '+str(mixed_epsilon)+' '+str(mixed_sigma)+'\n')		
+	f.close()
+
 class StructureSite: 
 	# bonds is a list of atoms that the atom is bonded to
 	# eg. (site)
@@ -601,7 +516,7 @@ class StructureSite:
 		for each in self.bonds:
 			if atom2 == each:
 				return bond_types[i] 
-			i = i + 1
+			i += 1
 		return None
 
 	def bonded(self, atom2):
@@ -631,7 +546,7 @@ class StructureSite:
 				for each in angle_type_list:
 					if atoms_list == each:
 						return (True, count)
-					count = count + 1	
+					count += 1	
 		return (False, None)
 
 	def add_dihedral(self, atom1, atom2, atom3, atom4, dihedral_type):
@@ -654,27 +569,14 @@ class StructureSite:
 					known_torsion_type = known_torsion_types()
 					dihedral_type_list = []
 					for each in known_torsion_type:
-						dihedral_type_list.append((each[0],each[1],each[2], each[3]))
+						dihedral_type_list.append((each[0],each[1],each[2],each[3]))
 
 					count = 0
 					for each in dihedral_type_list:
 						if atoms_sorted_list == each:
 							return (True, count)
-						count = count + 1	
+						count += 1	
 		return (False, None)
-
-def generate_VDW_DATA_FILE():
-	atom_types_general = known_atom_types_general()
-	f = open(str("VDW_LAMMPS.data"),'w')
-	for i in range(len(atom_types_general)):
-		lj_i = atom_types_general[i][2]
-		for j in range(len(atom_types_general)):
-			lj_j = atom_types_general[j][2]
-			mixed_epsilon = np.sqrt(float(lj_i[1])*float(lj_j[1]))
-			mixed_sigma = (float(lj_i[0])+float(lj_j[0]))/float(2)
-			f.write('pair_coeff '+str(i+1)+' '+str(j+1)+' lj/cut '+str(mixed_epsilon)+' '+str(mixed_sigma)+'\n')		
-	f.close()
-
 
 #-------------- Import Config File -----------
 global config
@@ -701,7 +603,7 @@ i,types, dependencies = 0,[None]*len(atom_types_general),[None]*len(atom_types_g
 for each in atom_types_general:
 	types[i] = each[0]
 	dependencies[i] = each[4].values()
-	i = i + 1
+	i += 1
 
 """
 This is to debug use other version for all nn geneations.
@@ -711,24 +613,36 @@ Next levels can be interdependant and need to be iterated through one at a time.
 """
 #--------- Find Nearest Neighbors -------------
 nn_sites = structure.get_all_neighbors(max_bond_length(),include_index=True)
-#------------- Bond Assignment ----------------
+#------------- Bonded Atoms Assignment ----------------
 #Iterates through each position assignment for Bond Assignment.
-for order_assign_number in position_order_assignment:
-	level = 0
+siteval = 0	
+for each_site in nn_sites:
+	for each in each_site:
+		if site_bonded(siteval,each[2], each[1]):
+			atom_sites[siteval].add_bond(each[2], None, each[1])
+	siteval += 1
 
-	if hasNumbers(dependencies[order_assign_number]):
-		level = 1
-	else:
+#------------- Atom Type Assignment ----------------
+level,siteval = 0,0
+for order_assign_number in position_order_assignment:
+	if dependencies[order_assign_number] == 'None':
 		level = 0
+	if hasNumbers(dependencies[order_assign_number]):
+		level = 2
+	else:
+		level = 1
 
 	siteval = 0	
 
 	for each_site in nn_sites:
-		if sites[siteval].species_string == types[order_assign_number].translate(None, digits):
-			site_update_type(siteval, each_site,level, order_assign_number)
-		siteval = siteval + 1
-	redefine_site_type()
-#------------- Dihedral Assignment -------------
+		type_assignment(siteval,level, order_assign_number)
+		siteval += 1
+
+#------------- Bond Type Assignment ----------------
+for i in range(0,len(nn_sites)):
+	bond_type_assignment(i)
+
+#------------- Dihedral Assignment -----------------
 #Iterates through each position assignement for Angle and Dihedrals
 siteval = 0	
 for each_site in nn_sites:
@@ -747,8 +661,17 @@ for each_site in nn_sites:
 				(checked_if_dihedrals, type_dihedral) = atom_sites[siteval].check_if_dihedral(siteval,int(each_nn[2]),each_second_nn,each_third_nn)
 				if checked_if_dihedrals:				
 					atom_sites[siteval].add_dihedral(siteval, int(each_nn[2]), each_second_nn, each_third_nn, type_dihedral)				
-	siteval = siteval + 1
+	siteval += 1
 #-------------- Generate Output Files -----------
 generate_DATA_FILE()
 generate_VDW_DATA_FILE()
+
+#-------------- Generate Output Notes -----------
+print("Sucessfully generated data files.")
+print(str(len(atom_sites))+ " atoms")
+print(str(count_BONDS()) + " bonds")
+print(str(count_ANGLES())+ " angles")
+num_dihedrals = count_dihedrals()
+if num_dihedrals > 0:
+	print(str(num_dihedrals)+ " dihedrals")
 

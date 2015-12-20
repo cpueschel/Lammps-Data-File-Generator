@@ -1,0 +1,90 @@
+#-------------------------------------------------------------------
+#     Configuration file for LDFM
+#      11 - 20 - 2015
+#   Charles Pueschel
+# Note: If there are repeats, the last value will be taken.
+# Order doesn't matter, comments do not matter. Delete as much as 
+# you desire.
+#-------------------------------------------------------------------
+
+#Importing Structure Files & File Type
+filename: 'CHA_Cartesian.vasp'
+structure_type: 'vasp'
+
+#General Settings
+bond_length_tolerance_factor: 0.015 #fractional
+angle_tolerance_factor: 30 #Degrees
+torsion_tolerance_factor: 30 #Degrees
+
+lattice_parameters:
+ vectors: {i:[26.5326, 0, 0], j:[0, 24.4848, 0], k:[0, -2.1335, 17.9254]}
+ angles: {a: 26.53263,b: 24.48479,c: 18.05191, alpha: 96.7874 ,beta: 90.0 ,gamma: 90.0} 
+
+
+#ATOM TYPES, CHARGES [e], LJ PARAMETERS [sigma A, epsilon kcal/mol], MASS [g/mol], CONNECTORS
+types:
+ O:
+  CHARGES: -0.2800
+  LJ_PARAMETERS:
+   0: 3.261
+   1: 0.0373
+  MASS: 14.07
+  REQUIRED_CONNECTORS: 
+   0: None
+ Si:
+  CHARGES: 0.1481
+  LJ_PARAMETERS:
+   0: 2.571
+   1: 0.0238
+  MASS: 1.005
+  REQUIRED_CONNECTORS:
+   0: None
+
+#BONDS (STRETCHING), ENERGY [kcal/mol/A^2], LENGTH [A]
+bonds:
+ 0:
+  i: O
+  j: Si
+  ENERGY: 680.0
+  LENGTH: 1.61
+
+#ANGLES (BENDING), ENERGY [kcal/mol/rad^2], THETA [deg]
+angles:
+ 0:
+  i: Si
+  j: O
+  k: Si
+  ENERGY: 70.0
+  THETA: 149.43
+
+#PROPER TORSIONS, ENERGY [kcal/mol], ANGLE [deg], MULTIPLICITY [m] how many ways to configure?
+propertorsions:
+ 0:
+  i: Si
+  j: O
+  k: Si
+  l: O
+  ENERGY: 4.80
+  ANGLE: 38.89
+  MULTIPLICITY: 1
+ 1:
+  i: Si
+  j: O
+  k: Si
+  l: O
+  ENERGY: 4.80
+  ANGLE: 24.2875
+  MULTIPLICITY: 1
+ 2:
+  i: Si
+  j: O
+  k: Si
+  l: O
+  ENERGY: 4.80
+  ANGLE: 158.6827
+  MULTIPLICITY: 1
+
+#IMPROPER TORSIONS, ENERGY [kcal/mol], ANGLE [deg], MULTIPLICITY [m] how many ways to configure?
+modelasdihedral: 1
+setting: 3 #setting 3rd atom as central atom is consistent with AMBER fitting convention
+impropertorsions:
