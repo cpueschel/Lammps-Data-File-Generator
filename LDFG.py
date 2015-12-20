@@ -15,15 +15,6 @@ import yaml
 from pymatgen.io.vasp import Poscar, sets
 from string import digits
 
-def known_atom_types_Connectors():
-	"""
-	Returns types_Required_Connectors: required connector types for a type
-	"""
-	types_Required_Connectors = []
-	for each in config['types']:
-		types_Required_Connectors.append(config['types'][str(each)]["REQUIRED_CONNECTORS"])
-	return types_Required_Connectors
-
 def known_atom_types():
 	"""
 	Returns known atom types in a list
