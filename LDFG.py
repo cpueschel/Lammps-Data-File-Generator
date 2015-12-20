@@ -246,8 +246,6 @@ def bond_type_assignment(siteval):
 		atom_number += 1
 			
 def type_assignment(siteval,level, order_assign_number):
-	# Fix level assignment!!!
-
 	#Intialize Types of bonds.
 	atom_types_general,bond_types_general = known_atom_types_general(),known_bond_types()
 	i,types, dependencies = 0,[None]*len(atom_types_general),[None]*len(atom_types_general)
@@ -265,7 +263,6 @@ def type_assignment(siteval,level, order_assign_number):
 			atom_sites[siteval].type = types[order_assign_number]
 
 		for each in bonded_atoms:
-
 			#Level 1: Remove type from atom to get species
 			if level == 1:
 				# Level 1: Assign based on atomic species.
@@ -277,9 +274,9 @@ def type_assignment(siteval,level, order_assign_number):
 		#Check if assigned a type, and if so, does the new type better define the bonds
 		#Case 1: Lists are Identical, assign type
 		if sorted(nn_types) == sorted(dependencies[order_assign_number]):
-
 			#Assign new type
 			atom_sites[siteval].type = types[order_assign_number]		
+		
 		#Case 2: Lists are possible, determine if larger than prior diescription
 		if sorted(dependencies[order_assign_number]) < sorted(nn_types):
 			if contains_digits(atom_sites[siteval].type):
@@ -289,11 +286,8 @@ def type_assignment(siteval,level, order_assign_number):
 			else:
 				atom_sites[siteval].type = types[order_assign_number]
 
-			
 def count_BONDS():
-	bonds,site_number = 0,0
-
-	bonds_added = []
+	bonds,site_number,bonds_added = 0,0,[]
 	for each in atom_sites:
 		for every in each.bonds:
 			if sorted([site_number,every]) not in bonds_added:
