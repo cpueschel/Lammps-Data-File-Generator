@@ -377,7 +377,7 @@ def generate_DATA_FILE():
 	gen,i = known_atom_types_general(),1
 	for each in gen:
 		print(str(i) + " " + str(each[3]), file=f)
-		i = i + 1
+		i += 1
 
 	# save_BLANK_LINES(1, f)
 	# print("Nonbond Coeffs",f)
@@ -389,7 +389,7 @@ def generate_DATA_FILE():
 	bonds,i = known_bond_types(),1
 	for each in bonds:
 		print(str(i)+" "+str(each[2])+" "+str(each[3]), file=f)	
-		i = i + 1
+		i += 1
 
 	#ANGLES (BENDING), ENERGY [kcal/mol/rad^2], THETA [deg]
 	save_BLANK_LINES(1, f)
@@ -397,7 +397,7 @@ def generate_DATA_FILE():
 	angles,i = known_angle_types(),1
 	for each in angles:
 		print(str(i)+" "+str(each[3])+" "+str(each[4]), file=f)	
-		i = i + 1
+		i += 1
 
 	#PROPER TORSIONS, ENERGY [kcal/mol], ANGLE [deg]
 	save_BLANK_LINES(1, f)
@@ -405,7 +405,7 @@ def generate_DATA_FILE():
 	torsions,i = known_torsion_types(),1
 	for each in torsions:
 		print(str(i)+" "+str(each[4])+" "+str(each[5])+" "+str(each[6]), file=f)	
-		i = i + 1
+		i += 1
 
 	# ATOMS
 	save_BLANK_LINES(1, f) 
@@ -422,7 +422,7 @@ def generate_DATA_FILE():
 		katg_each = katg[type_of_atom]
 		#q is atomic charge
 		print(str(i)+" "+str(molecule_number)+" "+str(type_of_atom+1)+" "+str(katg_each[1])+" "+str(coords[0])+" "+str(coords[1])+" "+str(coords[2])+" 0 0 0", file=f)
-		i = i + 1
+		i += 1
 
 	#Velocities, ADD IF NEEDED
 	save_BLANK_LINES(1, f) 
@@ -430,7 +430,7 @@ def generate_DATA_FILE():
 	i = 1
 	for each in atom_sites:
 		print(str(i)+" 0 0 0", file=f)
-		i = i + 1
+		i += 1
 
 	#Bonds
 	save_BLANK_LINES(1, f)
@@ -443,7 +443,7 @@ def generate_DATA_FILE():
 			if sorted([site_number,every+1]) not in bonds_added:
 				print(str(i)+" "+str(each.bond_type(every)+1)+" "+str(site_number)+" "+str(every+1), file=f)
 				bonds_added.append(sorted([site_number,every+1]))	
-				i = i + 1
+				i += 1
 		site_number = site_number + 1
 
 	#Angles
@@ -456,7 +456,7 @@ def generate_DATA_FILE():
 		for every in each.angles:
 			print(str(i)+" "+str(each.angle_types[ii]+1)+" "+str(site_number)+" "+str(every[1]+1)+" "+str(every[2]+1), file=f)	
 			ii = ii + 1
-			i = i + 1
+			i += 1
 		site_number = site_number + 1
 
 	#Dihedrals
@@ -469,7 +469,7 @@ def generate_DATA_FILE():
 		for every in each.dihedrals:
 			print(str(i)+" "+str(each.dihedral_types[ii]+1)+" "+str(site_number)+" "+str(every[1]+1)+" "+str(every[2]+1)+" "+str(every[3]+1), file=f)	
 			ii = ii + 1
-			i = i + 1
+			i += 1
 		site_number = site_number + 1
 	
 	#Impropers
