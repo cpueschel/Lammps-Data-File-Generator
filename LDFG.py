@@ -15,19 +15,14 @@ import yaml
 from pymatgen.io.vasp import Poscar, sets
 from string import digits
 
+#Returns known atom types in a list
 def known_atom_types():
-	"""
-	Returns known atom types in a list
-	"""
 	types = []
 	for each in config['types']:
 		types.append(str(each)) 
 	return types
-
+#Returns known atom information in a list
 def known_atom_types_general():
-	"""
-	Returns known atom types in a list
-	"""
 	types = known_atom_types()
 	known_atom_types_general = []
 	for every in types:
@@ -37,11 +32,9 @@ def known_atom_types_general():
 		required_connectors = config['types'][every]['REQUIRED_CONNECTORS']
 		known_atom_types_general.append( (every,charges,lj_parameters,mass,required_connectors) )
 	return known_atom_types_general
-
+	
+#Returns list_bond_types: list of known atom bonds(list of sorted tuples)
 def known_bond_types():
-	"""
-	Returns known_bond_types: list of known atom bonds(list of sorted tuples)
-	"""
 	list_bond_types = []
 	for every in range(0,len(config['bonds'])):
 		i = config['bonds'][every]['i']
@@ -51,10 +44,8 @@ def known_bond_types():
 		list_bond_types.append( (i,j,energy,length) )
 	return list_bond_types
 
+#Returns list_angle_types: list of known angles(list of sorted tuples)
 def known_angle_types():
-	"""
-	Returns known_angle_types: list of known angles(list of sorted tuples)
-	"""
 	list_angle_types = []
 	for every in range(0,len(config['angles'])):
 		i = config['angles'][every]['i']
@@ -65,10 +56,8 @@ def known_angle_types():
 		list_angle_types.append( (i,j,k,energy,theta) )
 	return list_angle_types
 
+#Returns known_torsion_types: list of known torsions(list of sorted tuples)
 def known_torsion_types():
-	"""
-	Returns known_torsion_types: list of known torsions(list of sorted tuples)
-	"""
 	known_torsion_types = []
 	for every in range(0,len(config['propertorsions'])):
 		i = config['propertorsions'][every]['i']
@@ -81,6 +70,7 @@ def known_torsion_types():
 		known_torsion_types.append( (i,j,k,l,energy,angle,multiplicity) )
 	return known_torsion_types
 
+# Max possible bond length for the system with tolerance factor
 def max_bond_length():
 	max_bond_length = 0
 	for each in known_bond_types():
@@ -89,16 +79,19 @@ def max_bond_length():
 				max_bond_length = bond_length
 	return float(max_bond_length + max_bond_length*config['bond_length_tolerance_factor'])
 
+# Checks if smaller list is in another list
 def is_slice_in_list(s,l):
-    len_s = len(s) #so we don't recompute length of s on every iteration
+    len_s = len(s)
     return any(s == l[i:len_s+i] for i in xrange(len(l) - len_s+1))
 
+# Does this list have digits
 def hasNumbers(inputLIST):
 	for each in inputLIST:
 		if any(char.isdigit() for char in each):
 			return any(char.isdigit() for char in each)
 	return False
 
+# Assigns the order for execution of atom types.
 def type_assignment_execution_order():
 	"""
 		Returns an array for the order of execution of the type assignment 
@@ -125,7 +118,6 @@ def type_assignment_execution_order():
 		dependencies[i] = each[4].values()
 		i += 1
 
-	#Change to order in types at some point, for readability keep variable # for now.
 	#1 Check for items without dependencies.
 	switch = 0
 	while len(type_execution_order) < len(types):
@@ -166,7 +158,7 @@ def type_assignment_execution_order():
 	print("Order of execution for type assignment:", print_types)
 	return position_order(types, type_execution_order)
 
-
+# Given a atom type (eg. C3) returns number 
 def atom_type_NUMBER(type_of_atom):
 	i = 0
 	for each in known_atom_types_general():
@@ -175,20 +167,20 @@ def atom_type_NUMBER(type_of_atom):
 		i += 1
 	return None
 
+# Determines if two sites are bonded together
 def site_bonded(site1,site2, bond_length):
 	"""
 	Requirements for a bond:
-	
-	Must have a bond length = required bond length +/- varriance 
-	Must be the correct atomic species_string.
-	Then it is identified as a "None" type of bond. Since specific atomic types need to be determined based on bonds.
+		Must have a bond length = required bond length +/- varriance 
+		Must be the correct atomic species_string.
+		Then it is identified as a "None" type of bond. Since specific atomic types need to be determined based on bonds.
 	"""
 	site1type = atom_sites[site1].type
 	site2type = atom_sites[site2].type
 	upper_range = bond_length + bond_length*float(config['bond_length_tolerance_factor'])
 	lower_range = bond_length - bond_length*float(config['bond_length_tolerance_factor'])
 	bond_types_general = known_bond_types()
-	for each in bond_types_general: # i=0,j=1,length=3
+	for each in bond_types_general:
 		if each[0].translate(None, digits) == site1type and each[1].translate(None, digits) == site2type: 
 				if  bond_length >= lower_range and bond_length <= upper_range:
 					return True
@@ -197,9 +189,11 @@ def site_bonded(site1,site2, bond_length):
 					return True
 	return False				
 
+#Checks for digits within an input string
 def contains_digits(s):
     return any(char.isdigit() for char in s)
 
+# Assigns bond types
 def bond_type_assignment(siteval):
 	atom_number = 0
 	for bonded_atom in atom_sites[siteval].bonds:
@@ -210,9 +204,9 @@ def bond_type_assignment(siteval):
 				break
 			bond_type_counter += 1
 		atom_number += 1
-			
+
+#Assigns atom types			
 def type_assignment(siteval,level, order_assign_number):
-	#Intialize Types of bonds.
 	atom_types_general,bond_types_general = known_atom_types_general(),known_bond_types()
 	i,types, dependencies = 0,[None]*len(atom_types_general),[None]*len(atom_types_general)
 	for each in atom_types_general:
@@ -236,8 +230,7 @@ def type_assignment(siteval,level, order_assign_number):
 			# Level 2: Assigned based on type attached.
 			if level == 2:
 				nn_types.append(atom_sites[each].type)
-
-		#Check if assigned a type, and if so, does the new type better define the bonds
+				
 		#Case 1: Lists are Identical, assign type
 		if sorted(nn_types) == sorted(dependencies[order_assign_number]):
 			#Assign new type
@@ -251,7 +244,7 @@ def type_assignment(siteval,level, order_assign_number):
 					atom_sites[siteval].type = types[order_assign_number]
 			else:
 				atom_sites[siteval].type = types[order_assign_number]
-
+# Counts number of bonds
 def count_BONDS():
 	bonds,site_number,bonds_added = 0,0,[]
 	for each in atom_sites:
@@ -262,23 +255,26 @@ def count_BONDS():
 		site_number += 1
 	return bonds
 
+# Counts number of angles
 def count_ANGLES():
 	angles = 0
 	for each in atom_sites:
 		angles += len(each.angles)
 	return angles
 
+#Counts number of dihedrals
 def count_dihedrals():
 	dihedrals = 0
 	for each in atom_sites:
 		dihedrals += len(each.dihedrals)
 	return dihedrals
 
+# Adds a specified number of blank lines
 def save_BLANK_LINES(number_blank_lines, f):
 	for i in range(0,number_blank_lines):
 		print('', file=f)
 
-
+# Generates the data file
 def generate_DATA_FILE():
 
 	"""
@@ -451,7 +447,6 @@ def generate_VDW_DATA_FILE():
 
 class StructureSite: 
 	# bonds is a list of atoms that the atom is bonded to
-	# eg. (site)
 	def __init__(self, type):
 		self.type = type
 		self.bonds = [] #list(set(bonds))
