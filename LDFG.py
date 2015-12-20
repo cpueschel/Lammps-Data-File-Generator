@@ -30,15 +30,7 @@ def generate_coordinate_list(molecule):
 	for each in range(0,len(molecule.sites)):
 		every = molecule.sites[each].coords
 		generate_coordinate_list[each] = [every[0], every[1], every[2]]
-	return generate_coordinate_list	 
-
-def import_Structure(type, config):
-	if type == 'xyz':
-		molecule = Molecule.from_file(config['filename'])
-		lattice = Lattice([config["lattice_parameters"]["vectors"]['i'],config["lattice_parameters"]["vectors"]["j"],config["lattice_parameters"]["vectors"]["k"]])
-		return Structure(lattice, generate_atom_list(molecule.species), generate_coordinate_list(molecule))
-	else:
-		return None 	
+	return generate_coordinate_list	 	
 
 def known_atom_types_Connectors():
 	"""
@@ -579,7 +571,7 @@ with open("config", 'r') as ymlfile:
 
 #-------------- Load in Structure ------------- 
 global structure
-structure_pos = Poscar.from_file(config['filename'])#import_Structure(config['structure_type'], config)
+structure_pos = Poscar.from_file(config['filename'])
 
 structure = structure_pos.structure
 sites = structure.sites
@@ -598,13 +590,7 @@ for each in atom_types_general:
 	types[i] = each[0]
 	dependencies[i] = each[4].values()
 	i += 1
-
-"""
-This is to debug use other version for all nn geneations.
-Need to iterate through "level" by level. 
-None-type are already assigned with proper site types.
-Next levels can be interdependant and need to be iterated through one at a time.
-"""
+	
 #--------- Find Nearest Neighbors -------------
 nn_sites = structure.get_all_neighbors(max_bond_length(),include_index=True)
 #------------- Bonded Atoms Assignment ----------------
