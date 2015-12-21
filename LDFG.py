@@ -205,6 +205,34 @@ def bond_type_assignment(siteval):
 			bond_type_counter += 1
 		atom_number += 1
 
+# Removes bonds that are left untyped, we do not have information for this type of bonding behavior.
+# This can happen if the bond tolerances are raised too high. 
+def bond_untype_removal(i):
+	flag = False
+	errors_list,indexes = [],[]
+
+
+	for ii in range(0,len(atom_sites[i].bonds)):
+		if atom_sites[i].bond_types[ii] == None:
+			#Remove This Bond
+			indexes.append(ii)
+			if not sorted([atom_sites[i].type,atom_sites[atom_sites[i].bonds[ii]].type]) in errors_list:
+				errors_list.append(sorted([atom_sites[i].type,atom_sites[atom_sites[i].bonds[ii]].type]))
+			flag = True
+
+	for each in errors_list:		
+		print("WARNING: I hope you know what you are doing, there may be undefined bonds within structure:",each[0],"with",each[1])
+
+	if not indexes == []:
+		for index in sorted(indexes, reverse=True):		
+			del atom_sites[i].bond_types[index]
+			del atom_sites[i].bonds[index]
+			del atom_sites[i].bond_lengths[index]
+
+	if flag == True:
+			print("This can happen if the bond tolerances are raised too high.")
+			print("Check your tolerances, located in the config file.")
+
 #Assigns atom types			
 def type_assignment(siteval,level, order_assign_number):
 	atom_types_general,bond_types_general = known_atom_types_general(),known_bond_types()
@@ -591,6 +619,9 @@ for order_assign_number in position_order_assignment:
 for i in range(0,len(nn_sites)):
 	bond_type_assignment(i)
 
+#------------- Remove Un-Typed Bonds ---------------
+for i in range(0,len(nn_sites)):
+	bond_untype_removal(i)
 #------------- Dihedral Assignment -----------------
 #Iterates through each position assignement for Angle and Dihedrals
 siteval = 0	
