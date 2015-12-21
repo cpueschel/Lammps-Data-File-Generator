@@ -616,11 +616,13 @@ for i in range(0,len(nn_sites)):
 errors = []
 for i in range(0,len(nn_sites)):
 	errors = bond_untype_removal(i,errors)
-for each in errors:		
-	print("WARNING: I hope you know what you are doing, there may be undefined bonds within structure:",each[0],"with",each[1])
+
 if not errors == []:
+	for each in errors:		
+		print("WARNING: I hope you know what you are doing, there may be undefined bonds within structure:",each[0],"with",each[1])
 	print("This can happen if the bond tolerances are raised too high.")
 	print("Check your tolerances, located in the config file.")
+
 #------------- Dihedral Assignment -----------------
 #Iterates through each position assignement for Angle and Dihedrals
 siteval = 0	
