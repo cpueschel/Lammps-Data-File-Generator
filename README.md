@@ -2,11 +2,14 @@
 Generate data file for lammps using force field and a POSCAR (VASP) like input file.
 
 ##1. What does it do?
-Quickly generate a LAMMPS data file to define a force field for a periodic system and Van Der Waals interactional parameters data file. 
+Quickly generate a LAMMPS data file to define a force field for a periodic system and Van Der Waals interactional parameters data file.
 This includes:
 * Bonds
 * Angles
 * Proper Torsions (dihedrals)
+* Improper Torsions [Future]
+
+The tolerances can be adjusted in the config file, since it is likely that unoptimized structures will have errors in bond lengths. 
 
 ##2. Required Dependencies
 Make sure you have installed pymatgen. This can be done:
